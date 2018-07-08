@@ -4,7 +4,7 @@ import copy
 def traverse(model):
     model_obj = to_dot(**model)
     for att in model_obj.__dict__:
-        if isinstance(getattr(model_obj, att), dict):
+        if att != 'd' and isinstance(getattr(model_obj, att), dict):
             setattr(model_obj, att, traverse(getattr(model_obj, att)))
         if isinstance(getattr(model_obj, att), list):
             setattr(model_obj, att, copy.deepcopy(model_obj.__dict__[att]))
@@ -15,7 +15,20 @@ def traverse(model):
 
 
 def to_dot(**dico):
+    def getitem(self, key):
+        val = self.d[key]
+        print("getting {}".format(key))
+        return val
+
+    def setitem(self, key, val):
+        print("setting {} = {}".format(key, val))
+        self.d[key] = val
+        setattr(self, key, val)
+
     type_obj = type("dot", (), dico)
+    type_obj.d = dico
+    type_obj.__getitem__ = getitem
+    type_obj.__setitem__ = setitem
     return type_obj
 
 
@@ -53,5 +66,5 @@ if __name__ == "__main__":
     inst.car.options[3].differential = "slipping"
     print(inst.car.options[3].differential)
     print(inst2.car.options[3].differential)
-    print(inst.car["wheel"]) # problem
+    print(inst.car["wheel"])
 
